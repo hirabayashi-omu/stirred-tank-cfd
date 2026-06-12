@@ -25,8 +25,67 @@
         font-size: 1.5rem;
         display: none;
       }
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+      }
+      .modal-content {
+        background-color: #222;
+        margin: 5% auto;
+        padding: 30px;
+        border: 1px solid #444;
+        width: 80%;
+        max-width: 900px;
+        height: 80vh;
+        overflow-y: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        color: #eee;
+        line-height: 1.6;
+      }
+      .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .close-btn:hover {
+        color: #fff;
+      }
+      .modal-content h2 {
+        border-bottom: 2px solid #555;
+        padding-bottom: 10px;
+        color: #4CAF50;
+      }
+      .modal-content h3 {
+        color: #00ffcc;
+        margin-top: 20px;
+      }
+      .math-block {
+        background: #111;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
     </style>
-    <script type="module" crossorigin src="./assets/index-op-RRlTN.js"></script>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script type="module" crossorigin src="./assets/index-BqTqJk0a.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -42,5 +101,120 @@
       <div style="display:flex; justify-content:space-between;"><span>Energy (T):</span> <span id="cfd-res-t">0.000e+0</span></div>
     </div>
     <div id="loading">Calculating...</div>
+    
+    <!-- Theory Modal -->
+    <div id="theory-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="document.getElementById('theory-modal').style.display='none'">&times;</span>
+        <h2>理論式と数値解法の解説 (Theoretical Background)</h2>
+        <p>本アプリケーションのCFD（数値流体力学）シミュレーションで使用している主要な支配方程式とモデルの理論式です。ブラウザ上でのリアルタイム実行を可能にするため、有限体積法 (FVM) とSIMPLEアルゴリズムをベースとした独自チューニングの簡易ソルバーを使用しています。</p>
+
+        <h3>1. 支配方程式 (Governing Equations)</h3>
+        <p>非圧縮性流体の質量保存（連続の式）および運動量保存則（ナビエ・ストークス方程式）を解いています。</p>
+        <div class="math-block">
+          質量保存則: $$\nabla \cdot \mathbf{u} = 0$$
+          運動量保存則: $$\rho \left( \frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \nabla \mathbf{u} \right) = -\nabla p + \nabla \cdot \mathbf{\tau} + \mathbf{F}$$
+        </div>
+        <p>ここで、$\mathbf{u}$ は流速ベクトル、$\rho$ は密度、$p$ は圧力、$\mathbf{\tau}$ は粘性応力テンソル、$\mathbf{F}$ は外力項（MRFゾーンでの遠心力やコリオリ力）を表します。</p>
+
+        <h3>2. 熱移動モデル (Heat Transfer Equation)</h3>
+        <p>温度場はエネルギー保存則に基づいて計算されます。</p>
+        <div class="math-block">
+          エネルギー保存則: $$\rho C_p \left( \frac{\partial T}{\partial t} + \mathbf{u} \cdot \nabla T \right) = \nabla \cdot (k \nabla T) + S_h$$
+        </div>
+        <p>ここで、$C_p$ は比熱、$k$ は熱伝導率、$T$ は温度、$S_h$ は熱源（ジャケットやコイルからの伝熱量）です。壁面での熱伝達は総括伝熱係数 $UA$ を用いてモデル化されています。</p>
+
+        <h3>3. 非ニュートン流体モデル (Non-Newtonian Fluid Models)</h3>
+        <p>流体の粘度は局所的なせん断速度 $\dot{\gamma}$ に応じて変化します。</p>
+        <ul>
+          <li><strong>べき乗則 (Power-law):</strong> みかけ粘度 $\mu = K \dot{\gamma}^{n-1}$</li>
+          <li><strong>ビンガム流体 (Bingham Plastic):</strong> 降伏応力 $\tau_0$ を考慮し、$\tau = \tau_0 + \mu_p \dot{\gamma}$ に基づいて実効粘度を計算</li>
+          <li><strong>ハーシェル・バルクリー (Herschel-Bulkley):</strong> $\tau = \tau_0 + K \dot{\gamma}^n$</li>
+        </ul>
+
+        <h3>4. MRFモデル (Multiple Reference Frame)</h3>
+        <p>インペラ（撹拌翼）周囲の回転領域は、MRF手法によって定常的な回転系として扱われます。回転座標系では以下の見かけの力が運動量方程式のソース項 $\mathbf{F}$ に追加されます。</p>
+        <div class="math-block">
+          $$\mathbf{F}_{MRF} = \underbrace{-\rho \mathbf{\Omega} \times (\mathbf{\Omega} \times \mathbf{r})}_{\text{遠心力}} - \underbrace{2\rho \mathbf{\Omega} \times \mathbf{u}}_{\text{コリオリ力}}$$
+        </div>
+
+        <h3>5. 粒子追跡 (DPM - Discrete Phase Model)</h3>
+        <p>流体中の固体粒子の軌跡は、流体から受ける抗力（Drag Force）と重力・浮力を考慮したニュートンの運動方程式を時間積分して求めます。</p>
+        <div class="math-block">
+          $$m_p \frac{d\mathbf{u}_p}{dt} = \mathbf{F}_D + \mathbf{F}_G$$
+          $$\mathbf{F}_D = \frac{1}{2} C_D \rho A_p |\mathbf{u} - \mathbf{u}_p| (\mathbf{u} - \mathbf{u}_p)$$
+        </div>
+        <p>インペラや邪魔板（バッフル）との衝突判定を行い、反発係数を考慮した反射計算を実装しています。</p>
+
+        <h3>6. 数値解法 (Numerical Method)</h3>
+        <p>ナビエ・ストークス方程式の圧力と速度のカップリングには、<strong>SIMPLEアルゴリズム</strong> (Semi-Implicit Method for Pressure-Linked Equations) の簡易版を採用しています。離散化には円筒座標系における<strong>有限体積法 (Finite Volume Method)</strong> を用い、対流項は一次風上差分（Upwind Scheme）を使用しています。</p>
+      </div>
+    </div>
+
+    <!-- UI Help Modal -->
+    <div id="ui-help-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="document.getElementById('ui-help-modal').style.display='none'">&times;</span>
+        <h2>設定項目（UI）のヘルプと解説</h2>
+        <p>右側の「設定パネル」および左側の「表示・操作パネル」の各項目の物理的意味、効果、および設定時の注意点を解説します。</p>
+
+        <h3>1. 形状設定 (Geometry)</h3>
+        <ul>
+          <li><strong>タンク直径・高さ・液深:</strong> 撹拌槽の基本的な寸法を決定します。液深を変えると上部の空間が変化します。</li>
+          <li><strong>鏡板 (Mirror Plate):</strong> タンク底部の形状です。皿形(Dish)や半楕円(HalfEllipse)を選ぶと、底部でのよどみ（デッドゾーン）が減少し、流体が滑らかに循環しやすくなります。</li>
+          <li><strong>MRF回転ゾーン:</strong> 撹拌翼の周囲に設定される回転座標系モデル（MRF）の適用範囲です。通常は翼より少し大きめに設定しますが、マージンを大きくしすぎると邪魔板（静止部）と干渉して計算が不安定になるため注意してください。</li>
+          <li><strong>インペラ (Impeller):</strong> 翼の形状を選択します。
+            <ul>
+              <li><strong>FlatPaddle/Turbine:</strong> 放射状の流れ（ラジアルフロー）を形成します。</li>
+              <li><strong>InclinedPaddle/FlatPropeller:</strong> 軸方向の流れ（アキシャルフロー）を形成し、上下の混合に優れます。</li>
+              <li><strong>Anchor/Ribbon:</strong> 高粘度流体に適しており、壁面付近の流体を強制的に剥がします。</li>
+            </ul>
+          </li>
+          <li><strong>邪魔板 (Baffle):</strong> 壁面に設置する板です。槽内の共回り（旋回流だけになる現象）を防ぎ、上下方向の循環流を作り出す役割があります。</li>
+        </ul>
+
+        <h3>2. 運転条件 (Operation)</h3>
+        <ul>
+          <li><strong>インペラ回転数 (RPM):</strong> 1分間あたりの回転数。大きくすると流速が上がり混合が促進されますが、実際の装置では動力（モーター負荷）が急増します。</li>
+          <li><strong>初期温度 (K):</strong> シミュレーション開始時の流体の全体温度です。</li>
+        </ul>
+
+        <h3>3. 流体物性 (Fluid Properties)</h3>
+        <ul>
+          <li><strong>流体モデル:</strong> 流体の粘度特性を選びます。
+            <ul>
+              <li><strong>Newtonian:</strong> 水のように、せん断速度によらず粘度が一定の流体。</li>
+              <li><strong>Power-law (べき乗則):</strong> マヨネーズや高分子溶液など、混ぜる（せん断速度が上がる）とサラサラになる（n &lt; 1: 擬塑性）流体。</li>
+              <li><strong>Bingham / Herschel-Bulkley:</strong> 歯磨き粉のように、一定の力（降伏応力 $\tau_0$）をかけないと流動し始めない流体。</li>
+            </ul>
+          </li>
+          <li><strong>密度・比熱・熱伝導率:</strong> 物質の基本的な熱・物理特性です。密度が高いと慣性が大きくなり、比熱が大きいと温まりにくくなります。</li>
+        </ul>
+
+        <h3>4. 熱境界条件 (Heat Boundaries) / 伝熱コイル</h3>
+        <ul>
+          <li><strong>ジャケット種類・温度:</strong> タンクの外壁を覆う熱交換器の設定です。壁面を通して流体を加熱または冷却します。</li>
+          <li><strong>総括伝熱係数 (UA):</strong> 熱の伝わりやすさを示す指標。値が大きいほど、ジャケットの温度が流体に素早く伝わります。</li>
+          <li><strong>伝熱コイル:</strong> タンク内に設置されるらせん状のパイプ。表面積を稼げるため伝熱効率が高いですが、流動の抵抗になる点に注意が必要です。</li>
+        </ul>
+
+        <h3>5. メッシュ設定 (Cylindrical Mesh)</h3>
+        <p>空間を計算格子（セル）に分割する際の設定です。<strong>※数値を大きくしすぎるとブラウザの動作が重くなる、またはフリーズするため注意！</strong></p>
+        <ul>
+          <li><strong>分割数 (r, θ, y):</strong> それぞれ半径、円周、高さ方向の分割数。細かくするほど計算精度が上がりますが、計算負荷（メモリとCPU）が3乗のオーダーで増大します。</li>
+          <li><strong>境界層 (Boundary Layer):</strong> 壁面付近は流速の変化が激しいため、壁に近いセルの間隔を密にする設定です。壁面での摩擦や熱伝達の計算精度に影響します。</li>
+        </ul>
+
+        <h3>6. 表示・操作パネル (Visualization)</h3>
+        <ul>
+          <li><strong>表示項目切替:</strong> タンクの外壁や翼を非表示にすることで、内部の流体の様子が見やすくなります。</li>
+          <li><strong>断面／３D切替:</strong> 「断面」にすると計算結果を平面（コンター図）で表示します。「3D」にすると空間全体に色付きの点を配置して全体像を把握できます。</li>
+          <li><strong>コンターの補間 (Smooth):</strong> チェックを入れると、セルとセルの間の色を滑らかに補間して綺麗に描画します（チェックを外すと計算セルのブロック感がそのまま見えます）。</li>
+          <li><strong>高温・低温領域の表示 (Iso-Surface):</strong> 指定した温度以上の領域、または以下の領域だけを立体的な「面（等温面）」として表示します。熱がどのように広がっているかの把握に便利です。</li>
+          <li><strong>粒子追跡 (DPM):</strong> 流れに乗って移動する粒子の軌跡をアニメーション表示します。混合の速さや、よどみ（デッドゾーン）に粒子が溜まる様子を直感的に確認できます。</li>
+        </ul>
+      </div>
+    </div>
+
   </body>
 </html>
