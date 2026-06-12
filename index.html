@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stirred Tank CFD</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #1a1a1a;
+        color: #ffffff;
+        font-family: sans-serif;
+      }
+      #app {
+        width: 100vw;
+        height: 100vh;
+      }
+      #loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        display: none;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-C_tiR4w3.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="cfd-monitor" style="display:none; position:absolute; bottom:20px; left:20px; background:rgba(0,0,0,0.8); padding:15px; border-radius:8px; width:300px; font-family:monospace; font-size:12px; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">
+      <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">CFD 計算モニタ (残差)</h3>
+      <div style="display:flex; justify-content:space-between;"><span>Iteration:</span> <span id="cfd-iter" style="color:#00ffcc;">0</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Momentum (U):</span> <span id="cfd-res-u">0.000e+0</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Pressure (P):</span> <span id="cfd-res-p">0.000e+0</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Energy (T):</span> <span id="cfd-res-t">0.000e+0</span></div>
+    </div>
+    <div id="loading">Calculating...</div>
+  </body>
+</html>
