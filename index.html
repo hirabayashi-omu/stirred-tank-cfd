@@ -84,8 +84,9 @@
         }
       };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-    <script type="module" crossorigin src="./assets/index-BqTqJk0a.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" crossorigin src="./assets/index-bh2hVgzS.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -213,6 +214,15 @@
           <li><strong>高温・低温領域の表示 (Iso-Surface):</strong> 指定した温度以上の領域、または以下の領域だけを立体的な「面（等温面）」として表示します。熱がどのように広がっているかの把握に便利です。</li>
           <li><strong>粒子追跡 (DPM):</strong> 流れに乗って移動する粒子の軌跡をアニメーション表示します。混合の速さや、よどみ（デッドゾーン）に粒子が溜まる様子を直感的に確認できます。</li>
         </ul>
+      </div>
+    </div>
+
+    <!-- DPM Chart Modal -->
+    <div id="dpm-chart-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <span class="close-btn" onclick="document.getElementById('dpm-chart-modal').style.display='none'">&times;</span>
+        <h2>粒度分布グラフ (Particle Size Distribution)</h2>
+        <canvas id="dpm-chart-canvas" width="400" height="300"></canvas>
       </div>
     </div>
 
