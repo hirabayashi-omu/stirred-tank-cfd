@@ -86,14 +86,21 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-bh2hVgzS.js"></script>
+    <script type="module" crossorigin src="./assets/index-D-A2kziN.js"></script>
   </head>
   <body>
     <div id="app"></div>
     <div id="cfd-monitor" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:15px; border-radius:8px; width:350px; font-family:monospace; font-size:12px; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border: 1px solid #555;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
         <button id="btn-run" style="flex:1; margin-right:5px; padding:10px; font-weight:bold; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">▶ 再生 / ⏸ 停止</button>
         <button id="btn-reset" style="flex:1; margin-left:5px; padding:10px; font-weight:bold; background:#f44336; color:white; border:none; border-radius:4px; cursor:pointer;">⏹ 計算リセット</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:10px;">
+        <span>計算モード:</span>
+        <select id="select-device" style="background:#222; color:#00ffcc; border:1px solid #555; padding:6px 10px; border-radius:4px; cursor:pointer; font-family:monospace; font-size:12px; outline:none; font-weight:bold;">
+          <option value="CPU">CPU</option>
+          <option value="GPU (WebGPU)">GPU (WebGPU)</option>
+        </select>
       </div>
       <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">CFD 計算モニタ (残差)</h3>
       <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>Iteration:</span> <span id="cfd-iter" style="color:#00ffcc;">0</span></div>
