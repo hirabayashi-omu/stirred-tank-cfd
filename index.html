@@ -86,11 +86,84 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-D-A2kziN.js"></script>
+    <script type="module" crossorigin src="./assets/index-CmDtcbnN.js"></script>
   </head>
   <body>
     <div id="app"></div>
+    <!-- Color Bar Panel: 3 horizontal bars stacked vertically, draggable -->
+    <div id="color-bar-container" style="
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(10,10,20,0.88);
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 10px 12px;
+      z-index: 150;
+      min-width: 240px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      user-select: none;
+      cursor: default;
+    ">
+      <!-- Drag Handle -->
+      <div id="color-bar-drag-handle" style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        cursor: grab;
+      ">
+        <span style="font-size:11px; color:#888; letter-spacing:2px;">⣿ カラーバー</span>
+        <button
+          onmousedown="event.stopPropagation();"
+          onclick="if(window.appParams){window.appParams.showColorBar=false;}"
+          style="background:none;border:none;color:#777;font-size:15px;cursor:pointer;padding:0 2px;line-height:1;"
+          title="閉じる">✕</button>
+      </div>
+
+      <!-- Temperature Bar -->
+      <div id="cb-temp-row" style="margin-bottom: 8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#00ffcc; min-width:40px; font-weight:bold;">温度(K)</span>
+          <span id="cb-temp-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">293.1</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
+          <span id="cb-temp-max" style="font-size:10px; color:#ccc; min-width:42px;">350.0</span>
+        </div>
+      </div>
+
+      <!-- Pressure Bar -->
+      <div id="cb-press-row" style="margin-bottom: 8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#ffaa00; min-width:40px; font-weight:bold;">圧力(Pa)</span>
+          <span id="cb-press-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
+          <span id="cb-press-max" style="font-size:10px; color:#ccc; min-width:42px;">0.0</span>
+        </div>
+      </div>
+
+      <!-- Velocity Bar -->
+      <div id="cb-vel-row">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#ff88ff; min-width:40px; font-weight:bold;">速度(m/s)</span>
+          <span style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.000</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
+          <span id="cb-vel-max" style="font-size:10px; color:#ccc; min-width:42px;">0.000</span>
+        </div>
+      </div>
+    </div>
     <div id="cfd-monitor" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:15px; border-radius:8px; width:350px; font-family:monospace; font-size:12px; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border: 1px solid #555;">
+      <!-- Drag Handle (top) -->
+      <div id="cfd-monitor-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:8px; cursor:grab; user-select:none;">
+        <span style="color:#00ffcc; font-size:13px; font-weight:bold;">CFD 計算モニタ (残差)</span>
+        <button
+          onmousedown="event.stopPropagation();"
+          onclick="if(window.appParams){window.appParams.showCFDMonitor=false;}"
+          style="background:none;border:none;color:#777;font-size:15px;cursor:pointer;padding:0 2px;line-height:1;"
+          title="閉じる">✕</button>
+      </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
         <button id="btn-run" style="flex:1; margin-right:5px; padding:10px; font-weight:bold; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">▶ 再生 / ⏸ 停止</button>
         <button id="btn-reset" style="flex:1; margin-left:5px; padding:10px; font-weight:bold; background:#f44336; color:white; border:none; border-radius:4px; cursor:pointer;">⏹ 計算リセット</button>
@@ -102,7 +175,6 @@
           <option value="GPU (WebGPU)">GPU (WebGPU)</option>
         </select>
       </div>
-      <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:5px;">CFD 計算モニタ (残差)</h3>
       <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>Iteration:</span> <span id="cfd-iter" style="color:#00ffcc;">0</span></div>
       <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>Momentum (U):</span> <span id="cfd-res-u">0.000e+0</span></div>
       <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>Pressure (P):</span> <span id="cfd-res-p">0.000e+0</span></div>
@@ -233,5 +305,48 @@
       </div>
     </div>
 
+    <script>
+      // Make color bar draggable
+      (function() {
+        const el = document.getElementById('color-bar-container');
+        const handle = document.getElementById('color-bar-drag-handle');
+        if (!el || !handle) return;
+        let startX, startY, startL, startT, dragging = false;
+        handle.addEventListener('pointerdown', (e) => {
+          dragging = true;
+          e.preventDefault();
+          handle.style.cursor = 'grabbing';
+          const rect = el.getBoundingClientRect();
+          // Switch from bottom/right positioning to top/left
+          el.style.bottom = 'auto';
+          el.style.right = 'auto';
+          el.style.top = rect.top + 'px';
+          el.style.left = rect.left + 'px';
+          startX = e.clientX;
+          startY = e.clientY;
+          startL = rect.left;
+          startT = rect.top;
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+        });
+        function onMove(e) {
+          if (!dragging) return;
+          const margin = 8;
+          let newL = startL + (e.clientX - startX);
+          let newT = startT + (e.clientY - startY);
+          const rect = el.getBoundingClientRect();
+          newL = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, newL));
+          newT = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, newT));
+          el.style.left = newL + 'px';
+          el.style.top = newT + 'px';
+        }
+        function onUp() {
+          dragging = false;
+          handle.style.cursor = 'grab';
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        }
+      })();
+    </script>
   </body>
 </html>
