@@ -76,6 +76,8 @@
         border-radius: 4px;
         overflow-x: auto;
       }
+      
+
     </style>
     <script>
       MathJax = {
@@ -86,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-4r0KR2Dh.js"></script>
+    <script type="module" crossorigin src="./assets/index-x4JjvRsl.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -142,6 +144,17 @@
         </div>
       </div>
 
+      <!-- Particle Concentration Bar -->
+      <div id="cb-conc-row" style="margin-bottom: 8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#aaff55; min-width:40px; font-weight:bold;">粒子(個/L)</span>
+          <span id="cb-conc-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
+          <span id="cb-conc-max" style="font-size:10px; color:#ccc; min-width:42px;">0.0</span>
+        </div>
+      </div>
+
       <!-- Velocity Bar -->
       <div id="cb-vel-row">
         <div style="display:flex; align-items:center; gap:8px;">
@@ -181,6 +194,8 @@
     </div>
     <div id="loading">Calculating...</div>
     
+
+
     <!-- Theory Modal -->
     <div id="theory-modal" class="modal">
       <div class="modal-content">
@@ -346,6 +361,8 @@
           window.removeEventListener('pointerup', onUp);
         }
       })();
+
+
     </script>
   </body>
 </html>
