@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-CZgckR4q.js"></script>
+    <script type="module" crossorigin src="./assets/index-DU3rfqZ1.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -315,7 +315,34 @@
       <div class="modal-content" style="max-width: 600px;">
         <span class="close-btn" onclick="document.getElementById('dpm-chart-modal').style.display='none'">&times;</span>
         <h2>粒度分布グラフ (Particle Size Distribution)</h2>
+        <div style="margin: -8px 0 12px; font-size: 13px; color: #ccc;">
+          <label style="margin-right: 14px; cursor: pointer;">
+            <input type="radio" name="dpm-chart-xscale" value="log" checked> 横軸: 対数 (Log)
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="dpm-chart-xscale" value="linear"> 横軸: 線形 (Linear)
+          </label>
+        </div>
         <canvas id="dpm-chart-canvas" width="400" height="300"></canvas>
+      </div>
+    </div>
+
+
+    <!-- Rheology Chart Modal (流動曲線・粘性曲線) -->
+    <div id="rheology-chart-modal" class="modal">
+      <div class="modal-content" style="max-width: 920px;">
+        <span class="close-btn" onclick="document.getElementById('rheology-chart-modal').style.display='none'">&times;</span>
+        <h2>流動曲線・粘性曲線 (Flow Curve / Viscosity Curve)</h2>
+        <div id="rheology-model-info" style="margin: -8px 0 12px; font-size: 13px; color: #9fd; font-family: monospace;"></div>
+        <div style="display:flex; flex-wrap:wrap; gap:20px;">
+          <div style="flex:1 1 380px; height:320px; position:relative;">
+            <canvas id="rheology-flow-canvas"></canvas>
+          </div>
+          <div style="flex:1 1 380px; height:320px; position:relative;">
+            <canvas id="rheology-visc-canvas"></canvas>
+          </div>
+        </div>
+        <p style="margin-top:14px; font-size:12px; color:#999;">※ 横軸は現在のパネルに入力されている物性値（流体モデル・粘度・K・n・降伏応力）に基づき、せん断速度 0.01〜1000 (1/s) の範囲で計算したものです。</p>
       </div>
     </div>
 
