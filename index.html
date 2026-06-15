@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-DGu_DFlJ.js"></script>
+    <script type="module" crossorigin src="./assets/index-C8hcH0o5.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -156,13 +156,24 @@
       </div>
 
       <!-- Velocity Bar -->
-      <div id="cb-vel-row">
+      <div id="cb-vel-row" style="margin-bottom: 8px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:10px; color:#ff88ff; min-width:40px; font-weight:bold;">速度(m/s)</span>
           <span style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.000</span>
           <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
             background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
           <span id="cb-vel-max" style="font-size:10px; color:#ccc; min-width:42px;">0.000</span>
+        </div>
+      </div>
+
+      <!-- Viscosity Bar -->
+      <div id="cb-visc-row">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#ffcc66; min-width:40px; font-weight:bold;">粘度(Pa·s)</span>
+          <span id="cb-visc-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">1.0e-3</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
+          <span id="cb-visc-max" style="font-size:10px; color:#ccc; min-width:42px;">1.0e-2</span>
         </div>
       </div>
     </div>
