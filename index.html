@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-Sm5FMQfo.js"></script>
+    <script type="module" crossorigin src="./assets/index-CC3T5UfM.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -190,8 +190,7 @@
       <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>Iteration:</span> <span id="cfd-iter" style="color:#00ffcc;">0</span></div>
       <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>Momentum (U):</span> <span id="cfd-res-u">0.000e+0</span></div>
       <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>Pressure (P):</span> <span id="cfd-res-p">0.000e+0</span></div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>Energy (T):</span> <span id="cfd-res-t">0.000e+0</span></div>
-      <div style="display:flex; justify-content:space-between;"><span>Turb. (ε):</span> <span id="cfd-res-eps">0.000e+0</span></div>
+      <div style="display:flex; justify-content:space-between;"><span>Energy (T):</span> <span id="cfd-res-t">0.000e+0</span></div>
     </div>
     <div id="loading">Calculating...</div>
     
@@ -391,6 +390,383 @@
       })();
 
 
+    </script>
+
+    <!-- ===== Preset Edit Modal ===== -->
+    <div id="preset-edit-modal" style="
+      display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.75); backdrop-filter:blur(4px);">
+      <div style="
+        background:#1e1e2e; margin:4% auto; padding:28px 32px; border:1px solid #555;
+        border-radius:10px; max-width:760px; max-height:88vh; overflow-y:auto;
+        color:#ddd; font-family:sans-serif; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.8);">
+        <span onclick="document.getElementById('preset-edit-modal').style.display='none'"
+          style="position:absolute;top:12px;right:16px;font-size:22px;cursor:pointer;color:#888;">✕</span>
+        <h2 style="color:#ffcc00; margin-top:0; font-size:16px; border-bottom:1px solid #444; padding-bottom:10px;">
+          🏭 プリセット標準条件の編集
+        </h2>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;">
+          化学工学標準設計則 (D/T, C/T, B/T) に基づく推奨値を初期設定しています。自由に変更可能。変更はブラウザに保存されます。
+        </p>
+        <div id="preset-ratios-info" style="background:rgba(255,204,0,0.07);border:1px solid rgba(255,204,0,0.2);border-radius:6px;padding:8px 12px;font-size:10.5px;color:#aaa;margin-bottom:14px;line-height:1.8;">
+          📐 設計則: <b style="color:#ccc">D/T = 0.40 (Pfaudler) / 0.45 (InclinedPaddle)</b> &nbsp;|&nbsp;
+          <b style="color:#ccc">C/T ≈ 0.33</b> (底面クリアランス) &nbsp;|&nbsp;
+          <b style="color:#ccc">B/T ≈ 0.085</b> (邪魔板幅) &nbsp;|&nbsp;
+          <b style="color:#ccc">W/D ≈ 0.20</b> (ブレード幅)
+        </div>
+        <div id="preset-edit-content"></div>
+        <div style="margin-top:20px; display:flex; gap:8px; justify-content:flex-end;">
+          <button id="btn-preset-reset-all"
+            style="padding:6px 14px;background:#555;border:none;border-radius:5px;color:#ddd;cursor:pointer;font-size:12px;">
+            🔄 すべてデフォルトに戻す
+          </button>
+          <button onclick="document.getElementById('preset-edit-modal').style.display='none'"
+            style="padding:6px 18px;background:#4CAF50;border:none;border-radius:5px;color:#fff;cursor:pointer;font-size:12px;font-weight:bold;">
+            ✓ 閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // ===== Reactor Preset System =====
+    (function() {
+      // --- Default preset definitions (設計則準拠値) ---
+      // T = tankDiameter
+      // D/T: Pfaudler=0.40, InclinedPaddle=0.45
+      // C/T ≈ 0.33 (measured from bottom dish tangent line; add dish depth ≈ T/4 for Hemisphere)
+      // B/T ≈ 0.085 (baffle width / T)
+      // W/D ≈ 0.20 (blade width / impeller diameter)
+      // H/T ≈ 1.0 (straight barrel), liquidHeight = barrel + dish depth (≈ T/4 for HalfEllipse)
+      // RPM: scale-down approx by equal P/V: N ∝ D^(-5/3) relative to large scale
+      const DEFAULT_PRESETS = {
+        large: {
+          label: 'ラージスケール (φ1.5m)',
+          desc: 'T=1.5m / HalfEllipse / Pfaudler / 邪魔板1枚 — 設計則: D/T=0.40, C/T=0.33',
+          params: {
+            tankDiameter:      1.50,
+            tankHeight:        1.50,   // H/T = 1.0
+            liquidHeight:      1.875,  // barrel + hemisphere depth (T/4 = 0.375)
+            mirrorPlateType:  'HalfEllipse',
+            impellerType:     'Pfaudler',
+            impellerDiameter:  0.60,   // D/T = 0.40
+            impellerClearance: 0.50,   // C/T ≈ 0.33 (from bottom tangent line)
+            bladeCount:        3,
+            bladeWidth:        0.120,  // W/D = 0.20
+            bladeThickness:    0.008,
+            bladeAngle:        45,
+            baffleCount:       1,
+            baffleWidth:       0.130,  // B/T ≈ 0.087
+            baffleThickness:   0.012,
+            mrfRadialMargin:   1.15,
+            mrfVerticalMarginTop:    0.06,
+            mrfVerticalMarginBottom: 0.06,
+            rpm:               45,
+            jacketType:       'Single',
+            jacketTemp:        353,
+            ua:                2000,
+            shaftDiameter:     0.072   // D_shaft/D = 0.12, D=0.60m
+          }
+        },
+        pilot: {
+          label: 'パイロットスケール (φ50cm)',
+          desc: 'T=0.5m / HalfEllipse / Pfaudler / 邪魔板1枚 — 設計則: D/T=0.40, C/T=0.33',
+          params: {
+            tankDiameter:      0.50,
+            tankHeight:        0.50,
+            liquidHeight:      0.625,  // 0.50 + 0.125 (T/4)
+            mirrorPlateType:  'HalfEllipse',
+            impellerType:     'Pfaudler',
+            impellerDiameter:  0.200,  // D/T = 0.40
+            impellerClearance: 0.167,  // C/T ≈ 0.33
+            bladeCount:        3,
+            bladeWidth:        0.040,  // W/D = 0.20
+            bladeThickness:    0.004,
+            bladeAngle:        45,
+            baffleCount:       1,
+            baffleWidth:       0.042,  // B/T ≈ 0.083
+            baffleThickness:   0.005,
+            mrfRadialMargin:   1.15,
+            mrfVerticalMarginTop:    0.02,
+            mrfVerticalMarginBottom: 0.02,
+            rpm:               120,
+            jacketType:       'Single',
+            jacketTemp:        353,
+            ua:                500,
+            shaftDiameter:     0.024   // D_shaft/D = 0.12, D=0.20m
+          }
+        },
+        bench: {
+          label: 'ベンチスケール (φ30cm)',
+          desc: 'T=0.3m / HalfEllipse / InclinedPaddle / 邪魔板1枚 — 設計則: D/T=0.45, C/T=0.33',
+          params: {
+            tankDiameter:      0.30,
+            tankHeight:        0.30,
+            liquidHeight:      0.375,  // 0.30 + 0.075 (T/4)
+            mirrorPlateType:  'HalfEllipse',
+            impellerType:     'InclinedPaddle',
+            impellerDiameter:  0.135,  // D/T = 0.45
+            impellerClearance: 0.100,  // C/T ≈ 0.33
+            bladeCount:        4,
+            bladeWidth:        0.027,  // W/D = 0.20
+            bladeThickness:    0.003,
+            bladeAngle:        45,
+            baffleCount:       1,
+            baffleWidth:       0.025,  // B/T ≈ 0.083
+            baffleThickness:   0.003,
+            mrfRadialMargin:   1.15,
+            mrfVerticalMarginTop:    0.014,
+            mrfVerticalMarginBottom: 0.014,
+            rpm:               200,
+            jacketType:       'Single',
+            jacketTemp:        353,
+            ua:                200,
+            shaftDiameter:     0.016   // D_shaft/D = 0.12, D=0.135m
+          }
+        },
+        lab: {
+          label: 'ラボスケール (φ8cm)',
+          desc: 'T=0.08m / Flat(None) / InclinedPaddle / 邪魔板1枚 — 設計則: D/T=0.45, C/T=0.33',
+          params: {
+            tankDiameter:      0.08,
+            tankHeight:        0.10,   // H/T = 1.25 (やや深め — ラボは縦長が多い)
+            liquidHeight:      0.10,   // フラット底 (dish depth = 0)
+            mirrorPlateType:  'None',
+            impellerType:     'InclinedPaddle',
+            impellerDiameter:  0.036,  // D/T = 0.45
+            impellerClearance: 0.027,  // C/T ≈ 0.33
+            bladeCount:        4,
+            bladeWidth:        0.007,  // W/D ≈ 0.20
+            bladeThickness:    0.001,
+            bladeAngle:        45,
+            baffleCount:       1,
+            baffleWidth:       0.007,  // B/T ≈ 0.088
+            baffleThickness:   0.001,
+            mrfRadialMargin:   1.15,
+            mrfVerticalMarginTop:    0.004,
+            mrfVerticalMarginBottom: 0.004,
+            rpm:               600,
+            jacketType:       'None',
+            jacketTemp:        293,
+            ua:                0,
+            shaftDiameter:     0.004   // D_shaft/D = 0.11, D=0.036m → 4mm shaft
+          }
+        }
+      };
+
+      // Runtime copy (editable)
+      let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+      try {
+        const saved = localStorage.getItem('reactorPresets');
+        if (saved) presets = JSON.parse(saved);
+      } catch(e) {}
+
+      const savePresets = () => {
+        try { localStorage.setItem('reactorPresets', JSON.stringify(presets)); } catch(e) {}
+      };
+
+      const applyPreset = (key) => {
+        const preset = presets[key];
+        if (!preset || !window.appParams) return;
+        Object.assign(window.appParams, preset.params);
+        if (window.updateCFDGeometry) window.updateCFDGeometry();
+        if (window.updateAllGuiDisplays) window.updateAllGuiDisplays();
+        document.getElementById('preset-desc').textContent = preset.desc;
+      };
+
+      const sel = document.getElementById('preset-select');
+      if (sel) {
+        sel.addEventListener('change', (e) => {
+          const key = e.target.value;
+          if (key) applyPreset(key);
+          else document.getElementById('preset-desc').textContent = '';
+        });
+      }
+
+      // --- Field definitions for edit modal ---
+      const FIELD_DEFS = [
+        { key: 'tankDiameter',      label: 'タンク直径 T (m)',           type: 'number', min: 0.01, max: 10,   step: 0.001 },
+        { key: 'tankHeight',        label: '直胴部高さ H (m)',           type: 'number', min: 0.01, max: 10,   step: 0.001 },
+        { key: 'liquidHeight',      label: '液深 (m, 鏡板込み)',         type: 'number', min: 0.01, max: 10,   step: 0.001 },
+        { key: 'mirrorPlateType',   label: '鏡板形状',                   type: 'select', options: ['None','FullHemisphere','Dish','HalfEllipse','Cone'] },
+        { key: 'impellerType',      label: 'インペラ種類',               type: 'select', options: ['FlatPropeller','FlatPaddle','InclinedPaddle','Turbine','Pfaudler','Anchor','Ribbon','Rushton'] },
+        { key: 'impellerDiameter',  label: 'インペラ径 D (m) [D/T比]',  type: 'number', min: 0.001, max: 5,   step: 0.001, ratio: (p) => `D/T=${(p.impellerDiameter/p.tankDiameter).toFixed(3)}` },
+        { key: 'impellerClearance', label: '底面クリアランス C (m) [C/T]', type: 'number', min: 0.001, max: 5, step: 0.001, ratio: (p) => `C/T=${(p.impellerClearance/p.tankDiameter).toFixed(3)}` },
+        { key: 'bladeCount',        label: 'ブレード枚数',               type: 'number', min: 2, max: 12, step: 1 },
+        { key: 'bladeWidth',        label: 'ブレード幅 W (m) [W/D]',    type: 'number', min: 0.001, max: 1,   step: 0.001, ratio: (p) => `W/D=${(p.bladeWidth/p.impellerDiameter).toFixed(3)}` },
+        { key: 'bladeThickness',    label: 'ブレード厚 (m)',             type: 'number', min: 0.0001, max: 0.1, step: 0.0001 },
+        { key: 'shaftDiameter',     label: 'シャフト径 (m) [D_s/D]',    type: 'number', min: 0.001, max: 0.5, step: 0.001, ratio: (p) => `Ds/D=${(p.shaftDiameter/p.impellerDiameter).toFixed(3)}` },
+        { key: 'bladeAngle',        label: 'ブレード角度 (度)',          type: 'number', min: 0, max: 90, step: 1 },
+        { key: 'baffleCount',       label: '邪魔板枚数',                 type: 'number', min: 0, max: 8, step: 1 },
+        { key: 'baffleWidth',       label: '邪魔板幅 B (m) [B/T]',      type: 'number', min: 0.001, max: 1,   step: 0.001, ratio: (p) => `B/T=${(p.baffleWidth/p.tankDiameter).toFixed(3)}` },
+        { key: 'baffleThickness',   label: '邪魔板厚 (m)',               type: 'number', min: 0.0001, max: 0.1, step: 0.0001 },
+        { key: 'mrfRadialMargin',   label: 'MRF半径マージン係数',        type: 'number', min: 1.0, max: 2.0, step: 0.01 },
+        { key: 'mrfVerticalMarginTop',    label: 'MRF上マージン (m)',    type: 'number', min: 0, max: 0.5, step: 0.001 },
+        { key: 'mrfVerticalMarginBottom', label: 'MRF下マージン (m)',    type: 'number', min: 0, max: 0.5, step: 0.001 },
+        { key: 'rpm',               label: '回転数 (RPM)',               type: 'number', min: 0, max: 3000, step: 5 },
+        { key: 'jacketType',        label: 'ジャケット種類',             type: 'select', options: ['None','Single','Half pipe'] },
+        { key: 'jacketTemp',        label: 'ジャケット温度 (K)',         type: 'number', min: 273, max: 500, step: 1 },
+        { key: 'ua',                label: '伝熱係数 UA (W/K)',          type: 'number', min: 0, max: 50000, step: 50 },
+      ];
+
+      const renderEditModal = () => {
+        const container = document.getElementById('preset-edit-content');
+        if (!container) return;
+        container.innerHTML = '';
+        const icons = { large:'🔵', pilot:'🟢', bench:'🟡', lab:'🔴' };
+        const colors = { large:'#1a4a7a', pilot:'#1a4a1a', bench:'#4a3a0a', lab:'#4a1a1a' };
+
+        Object.entries(presets).forEach(([key, preset]) => {
+          const p = preset.params;
+          const section = document.createElement('div');
+          section.style.cssText = `margin-bottom:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px;`;
+
+          // Header with editable desc
+          const header = document.createElement('div');
+          header.style.cssText = 'font-size:13px; font-weight:bold; color:#ffcc00; margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;';
+          header.innerHTML = `${icons[key]||'⚪'} ${preset.label}`;
+          section.appendChild(header);
+
+          const descRow = document.createElement('div');
+          descRow.style.cssText = 'margin-bottom:10px;';
+          const descInp = document.createElement('input');
+          descInp.type = 'text';
+          descInp.value = preset.desc;
+          descInp.style.cssText = 'width:100%;font-size:10px;background:#111;border:1px solid #444;border-radius:4px;color:#aaa;padding:3px 8px;box-sizing:border-box;';
+          descInp.dataset.preset = key; descInp.dataset.field = 'desc';
+          descRow.appendChild(descInp);
+          section.appendChild(descRow);
+
+          const grid = document.createElement('div');
+          grid.style.cssText = 'display:grid; grid-template-columns:1fr 1fr; gap:6px 16px;';
+
+          FIELD_DEFS.forEach(fd => {
+            const val = p[fd.key];
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; flex-direction:column; gap:2px;';
+
+            // Label row: field name + live ratio badge
+            const lblRow = document.createElement('div');
+            lblRow.style.cssText = 'display:flex; align-items:center; gap:4px; flex-wrap:wrap;';
+            const lbl = document.createElement('label');
+            lbl.style.cssText = 'font-size:9.5px; color:#888;';
+            lbl.textContent = fd.label;
+            lblRow.appendChild(lbl);
+
+            // Live ratio display
+            let ratioSpan = null;
+            if (fd.ratio) {
+              ratioSpan = document.createElement('span');
+              ratioSpan.style.cssText = 'font-size:9px;color:#ffcc00;padding:0 4px;background:rgba(255,204,0,0.08);border-radius:3px;';
+              ratioSpan.textContent = fd.ratio(p);
+              lblRow.appendChild(ratioSpan);
+            }
+            row.appendChild(lblRow);
+
+            let input;
+            if (fd.type === 'select') {
+              input = document.createElement('select');
+              input.style.cssText = 'background:#111;border:1px solid #444;border-radius:4px;color:#ccc;padding:3px 5px;font-size:11px;';
+              fd.options.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt; o.textContent = opt;
+                if (opt === val) o.selected = true;
+                input.appendChild(o);
+              });
+            } else {
+              input = document.createElement('input');
+              input.type = 'number';
+              input.min = fd.min; input.max = fd.max; input.step = fd.step;
+              input.value = val !== undefined ? val : '';
+              input.style.cssText = 'background:#111;border:1px solid #444;border-radius:4px;color:#ccc;padding:3px 6px;font-size:11px;width:100%;box-sizing:border-box;';
+            }
+            input.dataset.preset = key;
+            input.dataset.field = fd.key;
+
+            input.addEventListener('input', (e) => {
+              const pk = e.target.dataset.preset;
+              const fk = e.target.dataset.field;
+              const v = fd.type === 'select' ? e.target.value : parseFloat(e.target.value);
+              if (!isNaN(v) || fd.type === 'select') {
+                presets[pk].params[fk] = v;
+                // Update ratio badge
+                if (ratioSpan && fd.ratio) ratioSpan.textContent = fd.ratio(presets[pk].params);
+                savePresets();
+                const selEl = document.getElementById('preset-select');
+                if (selEl && selEl.value === pk) applyPreset(pk);
+              }
+            });
+            row.appendChild(input);
+            grid.appendChild(row);
+          });
+
+          section.appendChild(grid);
+
+          // Auto-calc helper
+          const autoBtn = document.createElement('button');
+          autoBtn.textContent = '⚡ 設計則から自動計算 (D/T・C/T・B/T・W/D)';
+          autoBtn.style.cssText = 'margin-top:10px;width:100%;padding:5px;font-size:10.5px;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);border-radius:4px;color:#ffcc00;cursor:pointer;';
+          autoBtn.onclick = () => {
+            const T = presets[key].params.tankDiameter;
+            const type = presets[key].params.impellerType;
+            const dtRatio = (type === 'Pfaudler') ? 0.40 : 0.45;
+            const D = T * dtRatio;
+            presets[key].params.impellerDiameter  = parseFloat(D.toFixed(4));
+            presets[key].params.impellerClearance = parseFloat((T * 0.33).toFixed(4));
+            presets[key].params.bladeWidth        = parseFloat((D * 0.20).toFixed(4));
+            presets[key].params.baffleWidth       = parseFloat((T * 0.085).toFixed(4));
+            const Ds = presets[key].params.impellerDiameter * 0.12;
+            presets[key].params.shaftDiameter     = parseFloat(Ds.toFixed(4));
+            // Hemisphere liquid height
+            if (presets[key].params.mirrorPlateType === 'HalfEllipse') {
+              presets[key].params.liquidHeight = parseFloat((presets[key].params.tankHeight + T * 0.25).toFixed(4));
+            }
+            savePresets();
+            renderEditModal();
+            const selEl = document.getElementById('preset-select');
+            if (selEl && selEl.value === key) applyPreset(key);
+          };
+          section.appendChild(autoBtn);
+          container.appendChild(section);
+        });
+
+        // Bind desc changes after rendering
+        container.querySelectorAll('input[data-field="desc"]').forEach(inp => {
+          inp.addEventListener('change', (e) => {
+            const pk = e.target.dataset.preset;
+            presets[pk].desc = e.target.value;
+            const selEl = document.getElementById('preset-select');
+            if (selEl && selEl.value === pk)
+              document.getElementById('preset-desc').textContent = e.target.value;
+            savePresets();
+          });
+        });
+      };
+
+      window._renderPresetEditModal = renderEditModal;
+
+      document.getElementById('btn-preset-edit') && document.getElementById('btn-preset-edit').addEventListener('click', () => {
+        renderEditModal();
+        document.getElementById('preset-edit-modal').style.display = 'block';
+      });
+
+      document.getElementById('btn-preset-reset-all').addEventListener('click', () => {
+        if (!confirm('すべてのプリセットをデフォルト値に戻しますか？')) return;
+        presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+        savePresets();
+        renderEditModal();
+        const selEl = document.getElementById('preset-select');
+        if (selEl && selEl.value) applyPreset(selEl.value);
+      });
+
+      document.getElementById('preset-edit-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('preset-edit-modal'))
+          document.getElementById('preset-edit-modal').style.display = 'none';
+      });
+
+      window.applyReactorPreset = applyPreset;
+      window.reactorPresets = presets;
+    })();
     </script>
   </body>
 </html>
