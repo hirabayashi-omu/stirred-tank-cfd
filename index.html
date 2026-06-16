@@ -29,7 +29,7 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 9999;
+        z-index: 100000;
         left: 0;
         top: 0;
         width: 100%;
@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-C8hcH0o5.js"></script>
+    <script type="module" crossorigin src="./assets/index-BAQvOR4F.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -238,6 +238,18 @@
           <li><strong>ハーシェル・バルクリー (Herschel-Bulkley):</strong> $\tau = \tau_0 + K \dot{\gamma}^n$</li>
         </ul>
 
+        <h3>3a. 温度依存性モデル — アンドレード式 (Andrade / Arrhenius)</h3>
+        <p>温度依存性 ON の場合、アレニウス型のアンドレード式を用いて降伏値・粘度項を温度補正します。</p>
+        <div class="math-block">
+          $$\tau = \tau_{0,\text{ref}} \cdot \exp\!\left(\frac{E_{a1}}{R}\left(\frac{1}{T} - \frac{1}{T_{\text{ref}}}\right)\right) + \left[ K_{\text{ref}} \cdot \exp\!\left(\frac{E_{a2}}{R}\left(\frac{1}{T} - \frac{1}{T_{\text{ref}}}\right)\right) \right] \dot{\gamma}^{n}$$
+        </div>
+        <ul>
+          <li>$T_{\text{ref}}$: 基準温度 [K]（GUI入力の $\tau_0$, $K$ がこの温度での値）</li>
+          <li>$E_{a1}/R$: 降伏値項の活性化エネルギー / 気体定数 [K]</li>
+          <li>$E_{a2}/R$: 粘度項の活性化エネルギー / 気体定数 [K]</li>
+          <li>換算例: 15 kJ/mol ÷ 8.314 ≈ 1804 K（水の粘度）、56 kJ/mol ÷ 8.314 ≈ 6733 K（グリセリン）</li>
+        </ul>
+
         <h3>4. MRFモデル (Multiple Reference Frame)</h3>
         <p>インペラ（撹拌翼）周囲の回転領域は、MRF手法によって定常的な回転系として扱われます。回転座標系では以下の見かけの力が運動量方程式のソース項 $\mathbf{F}$ に追加されます。</p>
         <div class="math-block">
@@ -358,6 +370,34 @@
       </div>
     </div>
 
+    <!-- Arrhenius / Andrade Chart Modal (アレニウスプロット) -->
+    <div id="arrhenius-chart-modal" class="modal">
+      <div class="modal-content" style="max-width: 920px;">
+        <span class="close-btn" onclick="document.getElementById('arrhenius-chart-modal').style.display='none'">&times;</span>
+        <h2>🌡️ アレニウス（アンドレード）プロット</h2>
+        <div id="arrhenius-model-info" style="margin:-8px 0 14px; font-size:12px; color:#9fd; font-family:monospace; white-space:pre-wrap; line-height:1.6;"></div>
+        <div style="display:flex; flex-wrap:wrap; gap:20px;">
+          <div style="flex:1 1 400px;">
+            <div style="font-size:12px; color:#ffa; margin-bottom:6px; font-weight:bold;">▸ 降伏値 τ₀(T)  [Pa]</div>
+            <div style="height:280px; position:relative;">
+              <canvas id="arrhenius-tau0-canvas"></canvas>
+            </div>
+          </div>
+          <div style="flex:1 1 400px;">
+            <div style="font-size:12px; color:#adf; margin-bottom:6px; font-weight:bold;">▸ 一貫性係数 K(T)  [Pa·sⁿ]</div>
+            <div style="height:280px; position:relative;">
+              <canvas id="arrhenius-K-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:14px; font-size:11px; color:#888; line-height:1.7;">
+          実線: T 軸（下・左）&nbsp;&nbsp;破線: アレニウスプロット 1000/T 軸（上）vs ln(値)（右）<br>
+          ※ 温度依存性 OFF の場合はすべての温度で一定値になります。<br>
+          ※ Ea/R の単位は [K]（= 活性化エネルギー Ea [J/mol] ÷ 気体定数 R = 8.314 J/(mol·K)）
+        </p>
+      </div>
+    </div>
+
     <script>
       // Make color bar draggable
       (function() {
@@ -406,7 +446,7 @@
 
     <!-- ===== Preset Edit Modal ===== -->
     <div id="preset-edit-modal" style="
-      display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%;
+      display:none; position:fixed; z-index:100000; left:0; top:0; width:100%; height:100%;
       background:rgba(0,0,0,0.75); backdrop-filter:blur(4px);">
       <div style="
         background:#1e1e2e; margin:4% auto; padding:28px 32px; border:1px solid #555;
