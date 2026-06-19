@@ -88,39 +88,61 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-DbGToNP2.js"></script>
+    <script type="module" crossorigin src="./assets/index-DaLtkvMW.js"></script>
   </head>
   <body>
     <div id="app"></div>
     <div id="color-bar-container" style="
-      position: absolute;
-      bottom: 20px;
-      left: calc(50% + 206px);
+      position: fixed;
+      top: 20px;
+      right: 20px;
       background: rgba(10,10,20,0.88);
       border: 1px solid #444;
       border-radius: 10px;
-      padding: 10px 12px;
       z-index: 150;
-      min-width: 240px;
+      width: 280px;
+      box-sizing: border-box;
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       user-select: none;
       cursor: default;
+      overflow: hidden;
     ">
-      <!-- Drag Handle -->
-      <div id="color-bar-drag-handle" style="
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        cursor: grab;
+      <!-- タイトルバー（ドラッグハンドル） -->
+      <div id="cb-title-bar" style="
+        display:flex; justify-content:space-between; align-items:center;
+        padding:5px 8px 5px 10px;
+        background:rgba(0,0,0,0.45);
+        border-bottom:1px solid #333;
+        cursor:grab;
+        user-select:none;
       ">
-        <span style="font-size:11px; color:#888; letter-spacing:2px;">⣿ カラーバー</span>
+        <span style="color:#00ffcc; font-size:11px; font-weight:bold; font-family:monospace;">⣿ カラーバー &amp; 操作条件</span>
         <button
           onmousedown="event.stopPropagation();"
-          onclick="if(window.appParams){window.appParams.showColorBar=false;}"
+          onclick="(function(){if(window.appParams){window.appParams.showColorBar=false;window.appParams.showOperatingConditions=false;if(window.updateAllGuiDisplays)window.updateAllGuiDisplays();}var cb=document.getElementById('color-bar-container');if(cb)cb.style.display='none';})();"
           style="background:none;border:none;color:#777;font-size:15px;cursor:pointer;padding:0 2px;line-height:1;"
           title="閉じる">✕</button>
       </div>
+      <!-- タブヘッダー -->
+      <div id="cb-tab-header" style="
+        display:flex; align-items:center;
+        background:rgba(0,0,0,0.3);
+        border-bottom:1px solid #333;
+      ">
+        <button id="cb-tab-btn-colorbar" onclick="_switchCbTab('colorbar')" style="
+          flex:1; padding:6px 4px; font-size:10px; font-family:monospace;
+          background:rgba(0,200,255,0.15); color:#00e5ff;
+          border:none; border-bottom:2px solid #00e5ff; cursor:pointer;
+        ">⣿ カラーバー</button>
+        <button id="cb-tab-btn-opcond" onclick="_switchCbTab('opcond')" style="
+          flex:1; padding:6px 4px; font-size:10px; font-family:monospace;
+          background:transparent; color:#888;
+          border:none; border-bottom:2px solid transparent; cursor:pointer;
+        ">⚙ 操作条件</button>
+      </div>
+
+      <!-- カラーバー タブ本体 -->
+      <div id="cb-tab-colorbar" style="padding:10px 12px;">
 
       <!-- Temperature Bar -->
       <div id="cb-temp-row" style="margin-bottom: 8px;">
@@ -176,8 +198,15 @@
           <span id="cb-visc-max" style="font-size:10px; color:#ccc; min-width:42px;">1.0e-2</span>
         </div>
       </div>
+
+      </div><!-- /cb-tab-colorbar -->
+
+      <!-- 操作条件 タブ本体 -->
+      <div id="cb-tab-opcond" style="display:none; padding:8px 10px;">
+        <div id="op-cond-body" style="font-family:monospace;font-size:11px;color:#ccc;line-height:1.7;"></div>
+      </div>
     </div>
-    <div id="cfd-monitor" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); padding:10px 12px; border-radius:8px; width:280px; font-family:monospace; font-size:11px; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border: 1px solid #555;">
+    <div id="cfd-monitor" style="position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.8); padding:10px 12px; border-radius:8px; width:280px; box-sizing:border-box; font-family:monospace; font-size:11px; z-index:100; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border: 1px solid #555;">
       <!-- Drag Handle (top) -->
       <div id="cfd-monitor-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:6px; cursor:grab; user-select:none;">
         <span style="color:#00ffcc; font-size:12px; font-weight:bold;">CFD 計算モニタ (残差)</span>
@@ -400,28 +429,48 @@
     </div>
 
     <script>
+      // カラーバーパネルをCFDモニタの直下に初期配置
+      (function positionColorBar() {
+        const monitor = document.getElementById('cfd-monitor');
+        const cb      = document.getElementById('color-bar-container');
+        if (!monitor || !cb) { setTimeout(positionColorBar, 100); return; }
+        const GAP = 8;
+        function place() {
+          // ドラッグで top/left が付いていたら再配置しない
+          if (cb.style.left && cb.style.left !== '') return;
+          const r = monitor.getBoundingClientRect();
+          cb.style.top   = (r.bottom + GAP) + 'px';
+          cb.style.right = '20px';
+        }
+        place();
+        // CFDモニタがリサイズ/移動されたときも追従（MutationObserver）
+        new MutationObserver(place).observe(monitor, { attributes: true, attributeFilter: ['style'] });
+      })();
+
       // Make color bar draggable
       (function() {
-        const el = document.getElementById('color-bar-container');
-        const handle = document.getElementById('color-bar-drag-handle');
+        const el     = document.getElementById('color-bar-container');
+        const handle = document.getElementById('cb-title-bar');
         if (!el || !handle) return;
         let startX, startY, startL, startT, dragging = false;
         handle.addEventListener('pointerdown', (e) => {
+          // ボタンクリックはドラッグ開始しない
+          if (e.target.closest('button')) return;
           dragging = true;
           e.preventDefault();
           handle.style.cursor = 'grabbing';
           const rect = el.getBoundingClientRect();
-          // Switch from bottom/right positioning to top/left
+          // top/left 絶対座標に切り替え
           el.style.bottom = 'auto';
-          el.style.right = 'auto';
-          el.style.top = rect.top + 'px';
-          el.style.left = rect.left + 'px';
+          el.style.right  = 'auto';
+          el.style.top    = rect.top  + 'px';
+          el.style.left   = rect.left + 'px';
           startX = e.clientX;
           startY = e.clientY;
           startL = rect.left;
           startT = rect.top;
           window.addEventListener('pointermove', onMove);
-          window.addEventListener('pointerup', onUp);
+          window.addEventListener('pointerup',   onUp);
         });
         function onMove(e) {
           if (!dragging) return;
@@ -429,19 +478,84 @@
           let newL = startL + (e.clientX - startX);
           let newT = startT + (e.clientY - startY);
           const rect = el.getBoundingClientRect();
-          newL = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, newL));
+          newL = Math.max(margin, Math.min(window.innerWidth  - rect.width  - margin, newL));
           newT = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, newT));
           el.style.left = newL + 'px';
-          el.style.top = newT + 'px';
+          el.style.top  = newT + 'px';
         }
         function onUp() {
           dragging = false;
           handle.style.cursor = 'grab';
           window.removeEventListener('pointermove', onMove);
-          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointerup',   onUp);
         }
       })();
 
+      // ===== カラーバーパネル タブ切替 =====
+      window._switchCbTab = function(tab) {
+        const colorbarTab  = document.getElementById('cb-tab-colorbar');
+        const opcondTab    = document.getElementById('cb-tab-opcond');
+        const btnColorbar  = document.getElementById('cb-tab-btn-colorbar');
+        const btnOpcond    = document.getElementById('cb-tab-btn-opcond');
+        if (!colorbarTab || !opcondTab) return;
+
+        const isColorbar = (tab === 'colorbar');
+        colorbarTab.style.display = isColorbar ? '' : 'none';
+        opcondTab.style.display   = isColorbar ? 'none' : '';
+
+        if (btnColorbar) {
+          btnColorbar.style.background   = isColorbar ? 'rgba(0,200,255,0.15)' : 'transparent';
+          btnColorbar.style.color        = isColorbar ? '#00e5ff' : '#888';
+          btnColorbar.style.borderBottom = isColorbar ? '2px solid #00e5ff' : '2px solid transparent';
+        }
+        if (btnOpcond) {
+          btnOpcond.style.background   = isColorbar ? 'transparent' : 'rgba(0,200,255,0.15)';
+          btnOpcond.style.color        = isColorbar ? '#888' : '#00e5ff';
+          btnOpcond.style.borderBottom = isColorbar ? '2px solid transparent' : '2px solid #00e5ff';
+        }
+
+        // params と GUI チェックボックスを同期（ユーザーがタブを直接クリックした場合）
+        if (window.appParams) {
+          window.appParams.showColorBar           = true; // パネルが見えている＝どちらかは true
+          window.appParams.showOperatingConditions = !isColorbar;
+          if (window.updateAllGuiDisplays) window.updateAllGuiDisplays();
+        }
+
+        // 操作条件タブ選択時: コンテンツを更新
+        if (!isColorbar) {
+          if (typeof window._refreshOperatingConditions === 'function') {
+            window._refreshOperatingConditions();
+          } else if (typeof window._updateOpCondBody === 'function') {
+            window._updateOpCondBody();
+          } else {
+            const body = document.getElementById('op-cond-body');
+            if (body && window.appParams) {
+              const p = window.appParams;
+              const fmt = (v, d=3) => (typeof v === 'number') ? v.toFixed(d) : (v != null ? v : '—');
+              body.innerHTML = [
+                '<b style="color:#00e5ff">▸ タンク</b>',
+                'タンク直径: ' + fmt(p.tankDiameter) + ' m',
+                'タンク高さ: ' + fmt(p.tankHeight) + ' m',
+                '液深: ' + fmt(p.liquidHeight) + ' m',
+                '<b style="color:#00e5ff">▸ インペラ</b>',
+                '種類: ' + (p.impellerType || '—'),
+                '直径: ' + fmt(p.impellerDiameter) + ' m',
+                '回転数: ' + fmt(p.rpm != null ? p.rpm : p.impellerRPM, 0) + ' RPM',
+                '<b style="color:#00e5ff">▸ 流体</b>',
+                '密度: ' + fmt(p.density, 1) + ' kg/m³',
+                '粘度: ' + fmt(p.viscosity, 5) + ' Pa·s',
+                '初期温度: ' + fmt(p.initialTemp, 1) + ' K',
+                '<b style="color:#00e5ff">▸ 熱条件</b>',
+                'ジャケット: ' + (p.jacketType || '—'),
+                'ジャケット温度: ' + fmt(p.jacketTemp, 1) + ' K',
+                'UA: ' + fmt(p.ua, 0) + ' W/K',
+              ].join('<br>');
+            } else if (body) {
+              body.innerHTML = '<span style="color:#666">（計算開始後に表示されます）</span>';
+            }
+          }
+        }
+      };
 
     </script>
 
