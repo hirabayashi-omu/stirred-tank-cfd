@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-DZoAeMdY.js"></script>
+    <script type="module" crossorigin src="./assets/index-QiZEsBnu.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -549,9 +549,13 @@
                 '粘度: ' + fmt(p.viscosity, 5) + ' Pa·s',
                 '初期温度: ' + fmt(p.initialTemp, 1) + ' K',
                 '<b style="color:#00e5ff">▸ 熱条件</b>',
-                'ジャケット: ' + (p.jacketType || '—'),
+                'ジャケット: ' + (p.jacketType || '—') + (p.jacketType && p.jacketType !== 'None' ? ' (' + ((p.mirrorPlateType === 'None' || p.jacketCoverage === 'ShellOnly') ? '胴ジャケット' : 'フルジャケット') + ')' : ''),
                 'ジャケット温度: ' + fmt(p.jacketTemp, 1) + ' K',
                 'UA: ' + fmt(p.ua, 0) + ' W/K',
+                ...((p.jacketType && p.jacketType !== 'None' && (p.mirrorPlateType === 'None' || p.jacketCoverage === 'ShellOnly')) ? [
+                  '底部鏡板 温度: ' + fmt(p.bottomHeadTemp, 1) + ' K',
+                  '底部鏡板 UA: ' + fmt(p.bottomHeadUa, 0) + ' W/m²K',
+                ] : []),
               ].join('<br>');
             } else if (body) {
               body.innerHTML = '<span style="color:#666">（計算開始後に表示されます）</span>';
@@ -633,8 +637,8 @@
             mrfVerticalMarginBottom: 0.06,
             rpm:               45,
             jacketType:       'Single',
+            jacketCoverage:   'Full',
             jacketTemp:        353,
-            ua:                2000,
             shaftDiameter:     0.072   // D_shaft/D = 0.12, D=0.60m
           }
         },
@@ -661,6 +665,7 @@
             mrfVerticalMarginBottom: 0.02,
             rpm:               120,
             jacketType:       'Single',
+            jacketCoverage:   'Full',
             jacketTemp:        353,
             ua:                500,
             shaftDiameter:     0.024   // D_shaft/D = 0.12, D=0.20m
@@ -689,6 +694,7 @@
             mrfVerticalMarginBottom: 0.014,
             rpm:               200,
             jacketType:       'Single',
+            jacketCoverage:   'Full',
             jacketTemp:        353,
             ua:                200,
             shaftDiameter:     0.016   // D_shaft/D = 0.12, D=0.135m
@@ -717,6 +723,7 @@
             mrfVerticalMarginBottom: 0.004,
             rpm:               600,
             jacketType:       'None',
+            jacketCoverage:   'ShellOnly', // mirrorPlateType='None'(フラット底)のため胴ジャケット
             jacketTemp:        293,
             ua:                0,
             shaftDiameter:     0.004   // D_shaft/D = 0.11, D=0.036m → 4mm shaft
@@ -775,6 +782,7 @@
         { key: 'mrfVerticalMarginBottom', label: 'MRF下マージン (m)',    type: 'number', min: 0, max: 0.5, step: 0.001 },
         { key: 'rpm',               label: '回転数 (RPM)',               type: 'number', min: 0, max: 3000, step: 5 },
         { key: 'jacketType',        label: 'ジャケット種類',             type: 'select', options: ['None','Single','Half pipe'] },
+        { key: 'jacketCoverage',    label: 'ジャケット形式 (範囲)',       type: 'select', options: ['Full','ShellOnly'] },
         { key: 'jacketTemp',        label: 'ジャケット温度 (K)',         type: 'number', min: 273, max: 500, step: 1 },
         { key: 'ua',                label: '伝熱係数 UA (W/K)',          type: 'number', min: 0, max: 50000, step: 50 },
       ];
