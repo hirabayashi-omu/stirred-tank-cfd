@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-BZB31ihE.js"></script>
+    <script type="module" crossorigin src="./assets/index-D3Pak0Ng.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -105,7 +105,8 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       user-select: none;
       cursor: default;
-      overflow: hidden;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
     ">
       <!-- タイトルバー（ドラッグハンドル） -->
       <div id="cb-title-bar" style="
@@ -147,7 +148,7 @@
       </div>
 
       <!-- カラーバー タブ本体 -->
-      <div id="cb-tab-colorbar" style="padding:10px 12px;">
+      <div id="cb-tab-colorbar" style="padding:10px 12px; max-height:calc(100vh - 120px); overflow-y:auto;">
 
       <!-- Temperature Bar -->
       <div id="cb-temp-row" style="margin-bottom: 8px;">
@@ -201,6 +202,19 @@
           <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
             background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);"></div>
           <span id="cb-visc-max" style="font-size:10px; color:#ccc; min-width:42px;">1.0e-2</span>
+        </div>
+      </div>
+
+      <!-- 乱流粘度 -->
+      <div id="cb-turbvisc-row" style="margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#a78bfa; min-width:40px; font-weight:bold;">μₜ(Pa·s)</span>
+          <span id="cb-turbvisc-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.00e+0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right,
+              hsl(270,80%,20%), hsl(270,80%,40%), hsl(240,80%,60%),
+              hsl(180,80%,60%), hsl(120,80%,60%), hsl(60,90%,60%), hsl(0,90%,55%));"></div>
+          <span id="cb-turbvisc-max" style="font-size:10px; color:#ccc; min-width:42px;">0.00e+0</span>
         </div>
       </div>
 
