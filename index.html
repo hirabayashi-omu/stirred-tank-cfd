@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-QiZEsBnu.js"></script>
+    <script type="module" crossorigin src="./assets/index-BZB31ihE.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -139,6 +139,11 @@
           background:transparent; color:#888;
           border:none; border-bottom:2px solid transparent; cursor:pointer;
         ">⚙ 操作条件</button>
+        <button id="cb-tab-btn-mesh" onclick="_switchCbTab('mesh')" style="
+          flex:1; padding:6px 4px; font-size:10px; font-family:monospace;
+          background:transparent; color:#888;
+          border:none; border-bottom:2px solid transparent; cursor:pointer;
+        ">📐 Mesh</button>
       </div>
 
       <!-- カラーバー タブ本体 -->
@@ -199,6 +204,24 @@
         </div>
       </div>
 
+      </div>
+
+      <!-- Mesh タブ本体 -->
+      <div id="cb-tab-mesh" style="display:none; padding:10px 12px; font-size:11px; color:#ccc;">
+        <div style="font-weight:bold; color:#00e5ff; margin-bottom:5px;">■ 各領域セル数</div>
+        <div id="mesh-info-cells" style="margin-bottom:10px; line-height:1.4;">
+          計算中...
+        </div>
+        <div style="font-weight:bold; color:#ffcc66; margin-bottom:5px;">■ 品質評価</div>
+        <div id="mesh-info-quality" style="margin-bottom:10px; line-height:1.4;">
+          計算中...
+        </div>
+        <div style="text-align:center;">
+          <button onclick="if(window._findNextProblemCell) window._findNextProblemCell()" style="
+            background:#333; color:#fff; border:1px solid #555; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px;">
+            問題セルを探す (カメラ移動)
+          </button>
+        </div>
       </div><!-- /cb-tab-colorbar -->
 
       <!-- 操作条件 タブ本体 -->
@@ -497,13 +520,19 @@
       window._switchCbTab = function(tab) {
         const colorbarTab  = document.getElementById('cb-tab-colorbar');
         const opcondTab    = document.getElementById('cb-tab-opcond');
+        const meshTab      = document.getElementById('cb-tab-mesh');
         const btnColorbar  = document.getElementById('cb-tab-btn-colorbar');
         const btnOpcond    = document.getElementById('cb-tab-btn-opcond');
-        if (!colorbarTab || !opcondTab) return;
+        const btnMesh      = document.getElementById('cb-tab-btn-mesh');
+        if (!colorbarTab || !opcondTab || !meshTab) return;
 
         const isColorbar = (tab === 'colorbar');
+        const isOpcond   = (tab === 'opcond');
+        const isMesh     = (tab === 'mesh');
+        
         colorbarTab.style.display = isColorbar ? '' : 'none';
-        opcondTab.style.display   = isColorbar ? 'none' : '';
+        opcondTab.style.display   = isOpcond   ? '' : 'none';
+        meshTab.style.display     = isMesh     ? '' : 'none';
 
         if (btnColorbar) {
           btnColorbar.style.background   = isColorbar ? 'rgba(0,200,255,0.15)' : 'transparent';
@@ -511,16 +540,21 @@
           btnColorbar.style.borderBottom = isColorbar ? '2px solid #00e5ff' : '2px solid transparent';
         }
         if (btnOpcond) {
-          btnOpcond.style.background   = isColorbar ? 'transparent' : 'rgba(0,200,255,0.15)';
-          btnOpcond.style.color        = isColorbar ? '#888' : '#00e5ff';
-          btnOpcond.style.borderBottom = isColorbar ? '2px solid transparent' : '2px solid #00e5ff';
+          btnOpcond.style.background   = isOpcond ? 'rgba(0,200,255,0.15)' : 'transparent';
+          btnOpcond.style.color        = isOpcond ? '#00e5ff' : '#888';
+          btnOpcond.style.borderBottom = isOpcond ? '2px solid #00e5ff' : '2px solid transparent';
+        }
+        if (btnMesh) {
+          btnMesh.style.background   = isMesh ? 'rgba(0,200,255,0.15)' : 'transparent';
+          btnMesh.style.color        = isMesh ? '#00e5ff' : '#888';
+          btnMesh.style.borderBottom = isMesh ? '2px solid #00e5ff' : '2px solid transparent';
         }
 
         // params と GUI チェックボックスを同期（ユーザーがタブを直接クリックした場合）
-        // カラーバー/操作条件は二者択一のため、アクティブなタブ側だけを true にする
         if (window.appParams) {
           window.appParams.showColorBar           = isColorbar;
-          window.appParams.showOperatingConditions = !isColorbar;
+          window.appParams.showOperatingConditions = isOpcond;
+          window.appParams.showMeshTab = isMesh;
           if (window.updateAllGuiDisplays) window.updateAllGuiDisplays();
         }
 
