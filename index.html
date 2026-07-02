@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-zW9J4LCi.js"></script>
+    <script type="module" crossorigin src="./assets/index-BelrMGf3.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -144,7 +144,7 @@
           flex:1; padding:6px 4px; font-size:10px; font-family:monospace;
           background:transparent; color:#888;
           border:none; border-bottom:2px solid transparent; cursor:pointer;
-        ">📐 Mesh</button>
+        ">📐 メッシュ品質</button>
       </div>
 
       <!-- カラーバー タブ本体 -->
@@ -235,6 +235,7 @@
             background:#333; color:#fff; border:1px solid #555; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px;">
             問題セルを探す (カメラ移動)
           </button>
+          <div id="mesh-info-problem-status" style="margin-top:6px; font-size:10px; color:#ff8888; min-height:14px;"></div>
         </div>
       </div><!-- /cb-tab-colorbar -->
 
@@ -547,6 +548,11 @@
         colorbarTab.style.display = isColorbar ? '' : 'none';
         opcondTab.style.display   = isOpcond   ? '' : 'none';
         meshTab.style.display     = isMesh     ? '' : 'none';
+
+        // メッシュ品質タブ以外に切り替えたら、問題セルの赤マーカーを消す
+        if (!isMesh && window._clearProblemCellMarker) {
+          window._clearProblemCellMarker();
+        }
 
         if (btnColorbar) {
           btnColorbar.style.background   = isColorbar ? 'rgba(0,200,255,0.15)' : 'transparent';
