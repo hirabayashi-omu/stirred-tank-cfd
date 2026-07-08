@@ -88,7 +88,7 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" crossorigin src="./assets/index-ZUctCCA_.js"></script>
+    <script type="module" crossorigin src="./assets/index-CUOO7QwH.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -215,6 +215,47 @@
               hsl(270,80%,20%), hsl(270,80%,40%), hsl(240,80%,60%),
               hsl(180,80%,60%), hsl(120,80%,60%), hsl(60,90%,60%), hsl(0,90%,55%));"></div>
           <span id="cb-turbvisc-max" style="font-size:10px; color:#ccc; min-width:42px;">0.00e+0</span>
+        </div>
+      </div>
+
+      <!-- [FIX-turbKRow] 乱流動エネルギー k / 乱流散逸率 eps / 比散逸率 omega の
+           カラーバー行。scene.js側は既にこの3つのIDを参照していたが
+           HTML側に要素自体が存在せず、animate()内でdocument.getElementById()の
+           戻り値を受け取る変数(turbKRow等)が未宣言エラーになっていた根本原因。
+           turbvisc行と同じ配色パターンで追加する。 -->
+      <div id="cb-turbk-row" style="margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#4ade80; min-width:40px; font-weight:bold;">k(m²/s²)</span>
+          <span id="cb-turbk-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.00e+0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right,
+              hsl(270,80%,20%), hsl(270,80%,40%), hsl(240,80%,60%),
+              hsl(180,80%,60%), hsl(120,80%,60%), hsl(60,90%,60%), hsl(0,90%,55%));"></div>
+          <span id="cb-turbk-max" style="font-size:10px; color:#ccc; min-width:42px;">0.00e+0</span>
+        </div>
+      </div>
+
+      <div id="cb-turbeps-row" style="margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#fb923c; min-width:40px; font-weight:bold;">ε(m²/s³)</span>
+          <span id="cb-turbeps-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.00e+0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right,
+              hsl(270,80%,20%), hsl(270,80%,40%), hsl(240,80%,60%),
+              hsl(180,80%,60%), hsl(120,80%,60%), hsl(60,90%,60%), hsl(0,90%,55%));"></div>
+          <span id="cb-turbeps-max" style="font-size:10px; color:#ccc; min-width:42px;">0.00e+0</span>
+        </div>
+      </div>
+
+      <div id="cb-turbomega-row" style="margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:10px; color:#38bdf8; min-width:40px; font-weight:bold;">ω(1/s)</span>
+          <span id="cb-turbomega-min" style="font-size:10px; color:#ccc; min-width:42px; text-align:right;">0.00e+0</span>
+          <div style="flex:1; height:12px; border-radius:3px; border:1px solid #333;
+            background: linear-gradient(to right,
+              hsl(270,80%,20%), hsl(270,80%,40%), hsl(240,80%,60%),
+              hsl(180,80%,60%), hsl(120,80%,60%), hsl(60,90%,60%), hsl(0,90%,55%));"></div>
+          <span id="cb-turbomega-max" style="font-size:10px; color:#ccc; min-width:42px;">0.00e+0</span>
         </div>
       </div>
 
